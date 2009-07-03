@@ -1,0 +1,47 @@
+<html>
+    <head>
+        <meta http-equiv="Content-Type" content="text/html; charset=utf-8">
+        <title>基础数据管理系统</title>
+        <link rel="stylesheet" type="text/css" href="../ext-2.2.1/resources/css/ext-all.css" />
+        <style type="text/css">
+            #loading-mask {
+                background-color: white;
+                height: 100%;
+                left: 0;
+                position: absolute;
+                top: 0;
+                width: 100%;
+                z-index: 20000;
+            }
+            #loading {
+                height: auto;
+                left: 45%;
+                padding: 2px;
+                position: absolute;
+                top: 40%;
+                z-index: 20001;
+            }
+            #loading img {
+                margin-bottom: 5px;
+            }
+            .x-node-ctx {
+                background: #C08ECF;
+                border: 1px solid #56076F;
+            }
+        </style>
+        <script type="text/javascript" src="../ext-2.2.1/adapter/ext/ext-base.js"></script>
+        <script type="text/javascript" src="../ext-2.2.1/ext-all-debug.js"></script>
+        <script type="text/javascript" src="hjp.namespace.js"></script>
+        <script type="text/javascript" src="hjp.config.js"></script>
+        <script type="text/javascript" src="widgets/tree/TBStrongTree.js"></script>
+        <script type="text/javascript" src="widgets/tree/TBJsonTreeLoader.js"></script>
+        <script type="text/javascript" src="index.js"></script>
+    </head>
+    <body>
+        <!-- Loading mask -->
+        <div id="loading-mask"></div>
+        <div id="loading">
+            <img src="images/loading.gif" width="71" height="71" style="margin-right:8px;" align="absmiddle"/>正在加载...</div>
+        </div>
+    </body>
+</html>
