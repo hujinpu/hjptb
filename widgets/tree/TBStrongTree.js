@@ -22,7 +22,24 @@ hjp.widgets.tree.TBStrongTree = Ext.extend(Ext.tree.TreePanel, {
         });
         
         if (this.contextMenuUrl) {
-            this.on('contextmenu', this.onContextMenu, this);
+            Ext.Ajax.request({
+                url: this.contextMenuUrl,
+                success: function(response) {
+                    var jsonDataString = response.responseText;
+                    
+                    try {
+                        this.typesData = eval('(' + jsonDataString + ')').dataset; // 记录层次可嵌套关系
+                    } catch(e) {
+                        Ext.Msg.alert('提示', response);
+                    }
+                    this.on('contextmenu', this.onContextMenu, this);
+                },
+                failure: function(response) {
+                    Ext.Msg.alert('提示', response);
+                },
+                scope: this
+            });
+            
         }
 
         hjp.widgets.tree.TBStrongTree.superclass.initComponent.apply(this, arguments);
@@ -37,33 +54,94 @@ hjp.widgets.tree.TBStrongTree = Ext.extend(Ext.tree.TreePanel, {
     },
 
     onContextMenu: function(node, e) {
-        if (!this.menu) { // create context menu on first right click
-            this.menu = new Ext.menu.Menu({
-                items: [{
-                    text:'哈哈',
-                    scope: this
-                }, '-', {
-                    text:'刷新',
-                    scope: this,
-                    handler: function() {
-                        Ext.Msg.alert('提示', '刷新');
-                    }
-                },{
-                    text:'删除',
-                    scope: this,
-                    handler: function(){
-                        Ext.Msg.alert('提示', '删除');
-                    }
-                }]
-            });
-            this.menu.on('hide', this.onContextHide, this);
+        if (!this.menu) {
+            this.createContextMenu(node);
+        } else {
+            this.menu.destroy();
+            delete this.menu;
+            this.createContextMenu(node);
         }
 
-        this.ctxNode = node;
-        this.ctxNode.ui.addClass('x-node-ctx');
-        this.menu.showAt(e.getXY());
+        if (this.menu) {
+            this.ctxNode = node;
+            this.ctxNode.ui.addClass('x-node-ctx');
+            this.menu.showAt(e.getXY());
+        }
     },
 
+    // private
+    createContextMenu: function(node) {
+        var menuItems = [];
+        var objbaseview = this.typesData.objbaseview;
+        var matchObj = null;
+        
+        (function(objs, nodeName) {
+            var _thisFunc = arguments.callee;
+            if (objs instanceof Array) {
+                Ext.each(objs, function(el) {
+                    if (el.name && (el.name == nodeName)) {
+                        matchObj = el;
+                        return false;
+                    } else if (el.children.objbaseview) {
+                        _thisFunc.call(this, el.children.objbaseview, nodeName)    
+                    }
+                }, this);
+            } else {
+                if (objs.name && (objs.name == nodeName)) {
+                    matchObj = objs;
+                    return false;
+                } else if (objs.children.objbaseview) {
+                    _thisFunc.call(this, objs.children.objbaseview, nodeName)    
+                }
+            }
+        })(objbaseview, node.attributes.name);
+
+        // 匹配成功则增加右键菜单项
+        if (matchObj) {
+            var itemsObj = matchObj.children.objbaseview;
+            if (itemsObj instanceof Array) {
+                Ext.each(itemsObj, function(el) {
+                    menuItems.push({
+                        text: itemsObj.name,
+                        handler: function() {
+                            Ext.Msg.alert('提示', '你点击了' + itemsObj.name);
+                        },
+                        scope: this
+                    });
+                }, this);
+                menuItems.push('-');
+                menuItems.push({
+                    text: '删除',
+                    handler: function() {
+                        Ext.Msg.alert('提示', '你将删除' + nodeName);
+                    },
+                    scope: this
+                });
+            } else if (itemsObj) {
+                menuItems.push({
+                    text: itemsObj.name,
+                    handler: function() {
+                        Ext.Msg.alert('提示', '你点击了' + itemsObj.name);
+                    },
+                    scope: this
+                });
+                menuItems.push('-');
+                menuItems.push({
+                    text: '删除',
+                    handler: function() {
+                        Ext.Msg.alert('提示', '你将删除' + node.attributes.name);
+                    },
+                    scope: this
+                });
+            }
+        } 
+        if (menuItems.length > 0) {
+            this.menu = new Ext.menu.Menu({items: menuItems});
+            this.menu.on('hide', this.onContextHide, this);
+        }
+    },
+
+    // private
     onContextHide: function() {
         if (this.ctxNode) {
             this.ctxNode.ui.removeClass('x-node-ctx');

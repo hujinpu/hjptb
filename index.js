@@ -1,20 +1,44 @@
 Ext.onReady(function() {
-    //setTimeout(function() {
+    /*
+    setTimeout(function() {
         Ext.get('loading').remove();
         Ext.get('loading-mask').fadeOut({remove: true});
-    //}, 1);        
-
-    new Ext.Panel({
-        title: 'Test Panel',
-        renderTo: Ext.getBody(),
+    }, 300);        
+    */
+    new Ext.Viewport({
         layout: 'border',
-        width: 500,
-        height: 500,
         items: [{
+            region: 'west',
+            collapsible: true,
+            title: '导航',
             xtype: 'hjp.widgets.tree.TBStrongTree',
+            width: 200,
+            autoScroll: true,
+            split: true,
+            loaderUrl: 'datas/tree.json'
+        }, {
+            title: '内容面板',
             region: 'center',
-            loaderUrl: 'datas/tree.json',
-            contextMenuUrl: 'datas/tree.json'
+            xtype: 'panel',
+            layout: 'border',
+            items: [{
+                region: 'west',
+                collapsible: true,
+                title: '结构树',
+                xtype: 'hjp.widgets.tree.TBStrongTree',
+                width: 200,
+                autoScroll: true,
+                split: true,
+                loaderUrl: 'datas/tree.json',
+                contextMenuUrl: 'datas/treeType.json'
+            }, {
+                region: 'center',
+                xtype: 'tabpanel',
+                items: {
+                    title: '结构一',
+                    html: '动态生成'
+                }
+            }]
         }]
     });
 });
