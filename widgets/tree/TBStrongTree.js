@@ -1,11 +1,14 @@
 /*
- * 不能拖拽的静态树，一般用于导航，或者单项选择。
+ * 静态无法拖拽的树，可以通过Json解析，自动生成动态菜单
+ * loaderUrl: 加载树数据的url
+ * contextMenuUrl：决定是否有右键菜单，以及右键菜单的内容均从这个url指定的Json得到解析和匹配
  */
 hjp.widgets.tree.TBStrongTree = Ext.extend(Ext.tree.TreePanel, {
     initComponent: function() {
         Ext.apply(this, {
             autoScroll: true,
             animate: true,
+            useArrows: this.contextMenuUrl ? false : true,
 
             root: new Ext.tree.AsyncTreeNode({
                 text: 'TBStrongTreeRoot'
@@ -53,6 +56,7 @@ hjp.widgets.tree.TBStrongTree = Ext.extend(Ext.tree.TreePanel, {
         hjp.widgets.tree.TBStrongTree.superclass.afterRender.call(this);
     },
 
+    // private 右键响应函数
     onContextMenu: function(node, e) {
         if (!this.menu) {
             this.createContextMenu(node);
@@ -69,7 +73,7 @@ hjp.widgets.tree.TBStrongTree = Ext.extend(Ext.tree.TreePanel, {
         }
     },
 
-    // private
+    // private 创建右键菜单
     createContextMenu: function(node) {
         var menuItems = [];
         var objbaseview = this.typesData.objbaseview;
@@ -121,7 +125,14 @@ hjp.widgets.tree.TBStrongTree = Ext.extend(Ext.tree.TreePanel, {
                 menuItems.push({
                     text: itemsObj.name,
                     handler: function() {
-                        Ext.Msg.alert('提示', '你点击了' + itemsObj.name);
+                        if (!this.win) {
+                            this.createWindow();
+                        } else {
+                            this.win.destroy();
+                            delete this.win;
+                            this.createWindow();
+                        }
+                        //Ext.Msg.alert('提示', '你点击了' + itemsObj.name);
                     },
                     scope: this
                 });
@@ -141,7 +152,56 @@ hjp.widgets.tree.TBStrongTree = Ext.extend(Ext.tree.TreePanel, {
         }
     },
 
-    // private
+    // private 创建右键菜单点击后探出的Window
+    createWindow: function() {
+        Ext.Ajax.request({
+            url: 'datas/fieldJson.json',
+            success: function(response) {
+                var jsonDataString = response.responseText;
+                // 创建表单域
+                function createField (desObj) {
+                    return {
+                        fieldLabel: desObj.name,
+                        name: desObj.column,
+                        allowBlank: false
+                    };  
+                };
+                
+                try {
+                    var jsonObj = eval('(' + jsonDataString + ')'); // 记录层次可嵌套关系
+                    var formItems = [];
+                    Ext.each(jsonObj.dataset.typevo.properties.propertyvo, function(el) {
+                        formItems.push(createField(el));
+                    }, this);
+
+                    this.win = new Ext.Window({
+                        layout: 'fit',
+                        width: 500,
+                        height: 300,
+                        closeAction: 'hide',
+                        plain: true,
+                        modal: true,
+                        items: {
+                            xtype: 'hjp.widgets.form.TBDynamicForm',
+                            url: 'submiturl',
+                            formItems: formItems,
+                            title: '表单标题'
+                        }
+                    });
+                    this.win.show();
+
+                } catch (e) {
+                    Ext.Msg.alert('提示', response);
+                }
+            },
+            failure: function(response) {
+                Ext.Msg.alert('提示', response);
+            },
+            scope: this
+        });
+    },
+
+    // private 响应右键菜单消失
     onContextHide: function() {
         if (this.ctxNode) {
             this.ctxNode.ui.removeClass('x-node-ctx');

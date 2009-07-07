@@ -20,7 +20,7 @@ Ext.apply(Ext.QuickTips.getQuickTip(), {
     side          Add an error icon to the right of the field with a popup on hover
     [element id]  Add the error text directly to the innerHTML of the specified element
  */
-Ext.form.Field.prototype.msgTarget = 'under';
+Ext.form.Field.prototype.msgTarget = 'side';
 
 Ext.Ajax.defaultHeaders = {
     'accept': 'application/json'
