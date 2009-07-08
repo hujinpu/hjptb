@@ -48,7 +48,9 @@ Ext.onReady(function() {
                 id: 'center-tabpanel',
                 region: 'center',
                 xtype: 'tabpanel',
-                autoDestroy: true
+                autoDestroy: true,
+                enableTabScroll: true,
+                defaults: {autoScroll: true}
             }]
         }]
     });
