@@ -30,14 +30,25 @@ Ext.onReady(function() {
                 autoScroll: true,
                 split: true,
                 loaderUrl: 'datas/tree.json',
-                contextMenuUrl: 'datas/treeType.json'
+                contextMenuUrl: 'datas/treeType.json',
+                listeners: {
+                    click: function(node) {
+                        var ct = Ext.getCmp('center-tabpanel');
+                        ct.removeAll();
+                        Ext.each(node.childNodes, function(el) {
+                            ct.add({
+                                title: el.text,
+                                html: el.text + '的相关内容'
+                            });
+                        });
+                        ct.setActiveTab(0);
+                    }
+                }
             }, {
+                id: 'center-tabpanel',
                 region: 'center',
                 xtype: 'tabpanel',
-                items: {
-                    title: '结构一',
-                    html: '动态生成'
-                }
+                autoDestroy: true
             }]
         }]
     });
