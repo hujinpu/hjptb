@@ -35,12 +35,26 @@ Ext.onReady(function() {
                     click: function(node) {
                         var ct = Ext.getCmp('center-tabpanel');
                         ct.removeAll();
-                        Ext.each(node.childNodes, function(el) {
-                            ct.add({
-                                title: el.text,
-                                html: el.text + '的相关内容'
-                            });
+                        ct.add({
+                            title: node.text,
+                            html: node.text + '的相关内容'
                         });
+                        var mo = node.attributes.matchObj || this.getMatchObj(node);
+                        var moItems = mo.children.objbaseview;
+                        if (moItems instanceof Array) {
+                            Ext.each(moItems, function(el) {
+                                ct.add({
+                                    title: el.name,
+                                    html: el.name + '的相关内容'
+                                });
+                            });
+                        } else if (moItems) {
+                            ct.add({
+                                title: moItems.name,
+                                html: moItems.name + '的相关内容'
+                            });
+                        }
+
                         ct.setActiveTab(0);
                     }
                 }

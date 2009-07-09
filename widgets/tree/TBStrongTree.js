@@ -73,57 +73,71 @@ hjp.widgets.tree.TBStrongTree = Ext.extend(Ext.tree.TreePanel, {
         }
     },
 
-    // private 创建右键菜单
-    createContextMenu: function(node) {
-        var menuItems = [];
+    // private 获得匹配菜单
+    getMatchObj: function(node) {
         var objbaseview = this.typesData.objbaseview;
         var matchObj = null;
         
-        (function(objs, nodeName) {
+        (function(objs, nodeType) {
             var _thisFunc = arguments.callee;
             if (objs instanceof Array) {
                 Ext.each(objs, function(el) {
-                    if (el.name && (el.name == nodeName)) {
+                    if (el.id && (el.id == nodeType)) {
                         matchObj = el;
                         return false;
                     } else if (el.children.objbaseview) {
-                        _thisFunc.call(this, el.children.objbaseview, nodeName)    
+                        _thisFunc.call(this, el.children.objbaseview, nodeType)    
                     }
                 }, this);
             } else {
-                if (objs.name && (objs.name == nodeName)) {
+                if (objs.id && (objs.id == nodeType)) {
                     matchObj = objs;
                     return false;
                 } else if (objs.children.objbaseview) {
-                    _thisFunc.call(this, objs.children.objbaseview, nodeName)    
+                    _thisFunc.call(this, objs.children.objbaseview, nodeType)    
                 }
             }
-        })(objbaseview, node.attributes.name);
+        })(objbaseview, node.attributes.type);
+        return matchObj;
+    },
+
+    // private 创建右键菜单
+    createContextMenu: function(node) {
+        var menuItems = [];
+
+        var matchObj = this.getMatchObj(node);
 
         // 匹配成功则增加右键菜单项
         if (matchObj) {
+            node.attributes.matchObj = matchObj;
             var itemsObj = matchObj.children.objbaseview;
             if (itemsObj instanceof Array) {
                 Ext.each(itemsObj, function(el) {
                     menuItems.push({
-                        text: itemsObj.name,
+                        text: '增加' + el.name,
                         handler: function() {
-                            Ext.Msg.alert('提示', '你点击了' + itemsObj.name);
+                            if (!this.win) {
+                                this.createWindow();
+                            } else {
+                                this.win.destroy();
+                                delete this.win;
+                                this.createWindow();
+                            }
                         },
                         scope: this
                     });
                 }, this);
                 menuItems.push('-');
                 menuItems.push({
-                    text: '删除',
+                    text: '删除' + node.text,
                     handler: function() {
-                        Ext.Msg.alert('提示', '你将删除' + nodeName);
+                        Ext.Msg.alert('提示', '你将删除' + node.text);
                     },
                     scope: this
                 });
             } else if (itemsObj) {
                 menuItems.push({
-                    text: itemsObj.name,
+                    text: '增加' + itemsObj.name,
                     handler: function() {
                         if (!this.win) {
                             this.createWindow();
@@ -132,24 +146,29 @@ hjp.widgets.tree.TBStrongTree = Ext.extend(Ext.tree.TreePanel, {
                             delete this.win;
                             this.createWindow();
                         }
-                        //Ext.Msg.alert('提示', '你点击了' + itemsObj.name);
                     },
                     scope: this
                 });
                 menuItems.push('-');
                 menuItems.push({
-                    text: '删除',
+                    text: '删除' + node.text,
                     handler: function() {
                         Ext.Msg.alert('提示', '你将删除' + node.attributes.name);
                     },
                     scope: this
                 });
+            } else {
+                menuItems.push({
+                    text: '删除' + node.text,
+                    handler: function() {
+                        Ext.Msg.alert('提示', '你将删除' + node.text);
+                    },
+                    scope: this
+                });
             }
-        } 
-        if (menuItems.length > 0) {
-            this.menu = new Ext.menu.Menu({items: menuItems});
-            this.menu.on('hide', this.onContextHide, this);
         }
+        this.menu = new Ext.menu.Menu({items: menuItems});
+        this.menu.on('hide', this.onContextHide, this);
     },
 
     // private 创建右键菜单点击后探出的Window
